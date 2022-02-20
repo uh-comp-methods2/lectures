@@ -1,0 +1,742 @@
+\documentclass[12pt,oneside]{amsart}
+\title{Computational methods 2: finite element method}
+
+\IfFileExists{tweakslo.sty}{\usepackage{tweakslo}}{
+\usepackage{amssymb,thmtools,mathtools,todonotes}
+\declaretheorem{theorem}\declaretheorem{definition}\declaretheorem{lemma}\declaretheorem{proposition}\declaretheorem{corollary}\declaretheorem{remark}}
+\newcommand{\HOX}[1]{\todo[noline,color=white,size=\footnotesize]{#1}}
+\newcommand{\TODO}[1]{\todo[inline,bordercolor=gray]{#1}}
+\def\p{\partial}
+\def\R{\mathbb R}
+\DeclareMathOperator{\supp}{supp}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+
+\declaretheorem{example}
+\def\I{\mathcal I}
+\def\inter{\mathrm{int}}
+\DeclareMathOperator{\linspan}{span}
+
+\begin{document}\maketitle
+
+\tableofcontents
+
+\section{Basic concepts}
+
+\subsection{Linear spaces of functions}
+
+Let $I \subset \R$ be a closed, bounded, nontrivial interval, that is, $I$ is of the form $[x_L, x_R]$
+where the left and right end points $x_L, x_R \in \R$ satisfy $x_L < x_R$. Write $F(I)$ for the set of functions $u : I \to \mathbb R$. Then $F(I)$ is a 
+\href{https://en.wikipedia.org/wiki/Vector_space#Notation_and_definition}{vector space} with respect to the usual pointwise addition and scalar muliplication
+    \begin{align*}
++ : F(I) \times F(I) \to F(I), \quad \cdot : \mathbb R \times F(I) \to F(I),
+    \end{align*}
+defined for $u,v \in F(I)$ and $c \in \mathbb R$ by
+    \begin{align*}
+(u + v)(x) = u(x) + v(x), \quad (cu)(x) = cu(x), \qquad x \in I.
+    \end{align*}
+Indeed, it is easy to verify that the required 8 axioms are satisfied. For example, {\em associativity of vector addition} holds since for all $u,v,w \in F(I)$ there holds
+    \begin{align*}
+(u + (v + w))(x) 
+&= 
+u(x) + (v+w)(x) 
+= 
+u(x) + v(x) + w(x) 
+\\&= 
+((u + v) + w)(x).
+    \end{align*}
+The other axioms follow from the properties of real numbers in a similar manner.
+
+\begin{definition}[Space of continuous functions]
+    \begin{align*}
+C(I) = \{ u \in F(I) \mid \textnormal{$u$ is continuous on $I$}\}.
+    \end{align*}
+\end{definition}
+
+This space can be made a \href{https://en.wikipedia.org/wiki/Normed_vector_space}{normed vector space} by equipping it with the norm 
+    \begin{align*}
+\|u\|_{L^\infty(I)} = \sup_{x \in I} |u(x)|.
+    \end{align*}
+We see that $C(I)$ is a subspace of $F(I)$. Indeed, the sum and product of two continuous functions are continuous, and thus $C(I)$ is closed under addition and scalar multiplication. 
+
+\begin{definition}[Spaces of differentiable functions]
+    \begin{align*}
+C^k(I) = \{ u \in C(I) \mid u', \dots, u^{(k)} \in C(I)\}, \quad k = 1,2,\dots.
+    \end{align*}
+\end{definition}
+
+It is easy to see that $C^k(I)$ is a subspace of $C(I)$. We also write $C^0(I) = C(I)$.
+
+\begin{definition}[Spaces of integrable functions]
+    \begin{align*}
+L^p(I) = \{u \in F(I) \mid \int_I |u(x)|^p dx < \infty \}, 
+\quad p \ge 1.
+    \end{align*}
+\end{definition}
+
+The space $L^p(I)$ can be made a normed vector spaces by equipping it with the norm 
+    \begin{align*}
+\|u\|_{L^p(I)} = \left( \int_I |u(x)|^p dx \right)^{\frac1p}.
+    \end{align*}
+For $p=2$, this norm coincides with that given by the inner product
+    \begin{align*}
+(u, v) = \int_I u(x) v(x) dx, \quad (\cdot, \cdot) : L^2(I) \times L^2(I) \to \mathbb R.
+    \end{align*}
+Thus $L^2(I)$ is an \href{https://en.wikipedia.org/wiki/Inner_product_space}{inner product space}.
+To get nice spaces, \href{https://en.wikipedia.org/wiki/Lebesgue_integration}{Lebesgue integration} should be used. We will get back to this later.
+
+\begin{definition}[Spaces of polynomials]
+    \begin{align*}
+\mathbb P_n = \{p : \R \to \R \mid \textnormal{$p$ is a polynomial of degree $\le n$}\}, \quad n = 0, 1, \dots.
+    \end{align*}
+\end{definition}
+
+We can show that 
+    \begin{align*}
+1, x, x^2, \dots, x^n
+    \end{align*}
+is a basis of $\mathbb P_n$. Thus $\mathbb P_n$ is a finite dimensional space of functions. 
+We may view the polynomials in $\mathbb P_n$ as functions on $I$. Then
+    \begin{align*}
+\mathbb P_n \subset C^k(I)
+    \end{align*}
+for any $n,k=0,1,\dots$. Hence $C^k(I)$ is infinite dimensional,
+and so are $L^2(I)$ and $F(I)$ due to 
+    \begin{align*}
+C^k(I) \subset L^2(I) \subset F(I).
+    \end{align*}
+
+\subsection{Inner product spaces}
+
+Let $V$ be an inner product space and write $(\cdot, \cdot)$ for the inner product on $V$ and $\|\cdot\|$ for the norm induced by the inner product.
+
+\begin{lemma}[Cauchy-Schwarz inequality]
+    \begin{align*}
+(u, v) \le \|u\| \|v\| \quad u,v \in V.
+    \end{align*}
+\end{lemma}
+
+\begin{lemma}[Orthogonality implies minimality]
+Let $u \in V$ and let $S \subset V$ be a subspace. Suppose that $s \in S$ satisfies
+    \begin{align*}
+(u - s, v) = 0 \quad \text{for all $v \in S$}.
+    \end{align*}
+Then $\| u - s \| = \min_{v \in S} \| u - v \|$.
+\end{lemma}
+\begin{proof}
+If $u = s$ then both the sides of the claimed equality are zero.
+Suppose now that $u \ne s$. Let $v \in S$. Then $v -s \in S$ implies
+    \begin{align*}
+\| u - s \|^2 
+&= 
+(u - s, u - s) 
+= 
+(u - s, u - v) + (u - s, v - s)
+= 
+(u - s, u - v) 
+\\&\le 
+\| u - s \| \| u - v \|.
+    \end{align*}
+We may divide by $\| u - s \|$ as $u \ne s$. As $v \in S$ is arbitrary, the claim follows.
+\end{proof}
+
+\subsection{A boundary value problem}
+
+To simplify the notation, 
+    \begin{align*}
+I = [0,1]
+    \end{align*}
+for the rest of the section.
+
+Let $f \in C(I)$ and let $u \in C^2(I)$ solve the boundary value problem 
+\begin{align}\label{eq_poisson_1d}
+\begin{cases}
+-u'' = f & \text{on $I$},
+\\
+u(0) = 0 = u(1).
+\end{cases}\end{align}
+This is the one dimensional version of \href{https://en.wikipedia.org/wiki/Poisson's_equation}{Poisson's equation}. Define the linear space
+    \begin{align}\label{def_wrong_V}
+\mathcal V = \{ v \in C^1(I) : v(0) = v(1) = 0 \},
+    \end{align}
+and let $v \in \mathcal V$. Then, writing $(\cdot, \cdot)$ for the inner product on $L^2(I)$, integration by parts gives $-(u'', v) = (u', v')$. To summarize, (1) implies
+\begin{align}\label{eq_weak_prelim}
+(u', v') = (f, v) \quad \text{for all $v \in \mathcal V$}. 
+\end{align}
+
+The opposite holds as well, that is, \eqref{eq_weak_prelim} implies \eqref{eq_poisson_1d} for $u \in C^2(I)$.
+An elementary proof of this fact is given in \cite{BS}, see Theorem 0.1.4. We will we return to this later when we have developed more sophisticated tools, see Lemma~\ref{lem_formulations} below.
+We could call \eqref{eq_weak_prelim} a weak formulation of \eqref{eq_poisson_1d}, but we will reserve this term for a modification of \eqref{eq_weak_prelim} where $\mathcal V$ is replaced by a slightly different vector space.  
+
+We may view the left-hand side of \eqref{eq_weak_prelim} as a bilinear form on $\mathcal V$, that is, as a map $a: \mathcal V \times \mathcal V \to \R$, linear in both of its arguments.
+We write  
+    \begin{align}\label{def_a}
+a(u, v) = (u', v'), \quad a : \mathcal V \times \mathcal V \to \mathbb R,
+    \end{align}
+to emphasize this point of view.   
+Moreover, we may view $(f, v)$ as a linear form on $\mathcal V$, that is, as a linear map $L : \mathcal V \to \R$. We write 
+    \begin{align}\label{def_L}
+L(v) = (f,v), \quad L : \mathcal V \to \R.
+    \end{align}
+
+
+The bilinear form $a$ gives an inner product on $\mathcal V$. Indeed, $a(u,u) \ge 0$ for $u \in \mathcal V$, and if $a(u,u) = 0$ then $u'(x) = 0$ for all $x \in I$.
+As $u(0) = 0$, it follows that $u(x) = 0$ for all $x \in I$.
+
+\subsection{Galerkin method}
+
+Galerkin method converts a continuous problem, commonly a weak formulation of a partial differential equation, to a discrete problem by applying linear constraints determined by finite sets of basis functions.
+
+\begin{theorem}[Galerkin solution]\label{th_gsol}
+Let $S \subset V$ be two vector spaces.
+Suppose that $a$ is an inner product on $V$ and that $S$ is finite dimensional. 
+Let $L : V \to \mathbb R$ be linear. Then there is unique $u_S \in S$ such that 
+    \begin{align*}
+a(u_S,v) = L(v) \quad \text{for all $v \in S$}.
+    \end{align*}
+\end{theorem}
+We call $u_S$ the Galerkin solution.
+\begin{proof}
+Let $\phi_j$, $j=1,\dots,n$, be a basis of $S$, and write
+    \begin{align*}
+u_S = \sum_{j=1}^n U_j \phi_j, 
+\quad
+K_{ij} = a(\phi_i, \phi_j),
+\quad
+F_i = L(\phi_i), 
+\qquad i,j=1,\dots,n.
+    \end{align*}
+Moreover, write $U$ and $F$ for the vectors with elements $U_i$ and $F_i$, and $K$ for the matrix with elements $K_{ij}$. Then
+    \begin{align*}
+a(u_S,v) = L(v) \quad \text{for all $v \in S$}.
+    \end{align*}
+is equivalent to $KU = F$. This is a square system of linear equations and existence and uniqueness of a solution $U$ are equivalent. So it is enough to show that $KU = 0$ implies $U = 0$. But $KU = 0$ is equivalent to $a(u_S, u_S) = 0$, and this again implies that $u_S = 0$ since $a$ is an inner product.
+\end{proof}
+
+\begin{lemma}[Galerkin orthogonality]
+Let $S \subset V$, $a$, and $L$ be as in the previous theorem. Suppose that $u \in V$ satisfies
+    \begin{align*}
+a(u, v) = L(v) \quad \text{for all $v \in V$}.
+    \end{align*}
+Then the Galerkin solution $u_S  \in S$ satisfies
+    \begin{align*}
+a(u-u_S,v) = 0 \quad \text{for all $v \in S$}.
+    \end{align*}
+\end{lemma}
+\begin{proof}
+Simply compute
+    \begin{align*}
+a(u-u_S,v) = a(u, v) - a(u_S, v) = L(v) - L(v) = 0.
+    \end{align*}
+\end{proof}
+
+We write $\|u\|_E = \sqrt{a(u,u)}$ for the norm induced by the inner product $a$. Galerkin orthogonality implies the minimality:
+
+\begin{corollary}[Abstract error estimate]\label{cor_abs_err}
+Let $S \subset V$, $a$, and $u$ be as in the previous lemma. 
+Then the Galerkin solution $u_S \in S$ satisfies
+    \begin{align*}
+\|u-u_S\|_E = \min_{v \in S} \|u - v\|_E.
+    \end{align*}
+\end{corollary}
+
+\subsection{Linear interpolant}
+\HOX{Will revisit this}
+Recall that linear interpolation was studied in \href{https://github.com/uh-comp-methods1/notebooks/blob/main/interpolation/lecture.ipynb}{Computational methods 1}.
+Let $n \ge 1$ be an integer, let 
+    \begin{align}\label{def_mesh}
+0 = x_0 < x_1 < \dots < x_n = 1,
+    \end{align}
+and write
+    \begin{align}\label{def_mesh_size}
+h = \max_{i=1,\dots,n} |x_i - x_{i-1}|.
+    \end{align}
+The {\em linear interpolant} of a function $u \in C(I)$ is 
+    \begin{align*}
+\I_h u(x) = \frac{x - x_{i-1}}{x_i - x_{i-1}} u(x_i) + \frac{x_{i} - x}{x_i - x_{i-1}} u(x_{i-1}), \qquad x \in I_i, \quad i = 1,\dots,n.
+    \end{align*}
+where $I_i$ is the subinterval $[x_{i-1}, x_i]$.
+Then $\I_h u(x_i) = u(x_i)$ for all $i=0,\dots,n$, $\I_h u$ is continuous, and $\I_h u$ is a polynomial of first order on each $I_i$. 
+Recall the following theorem.
+
+\begin{theorem}[\href{https://nbviewer.org/github/uh-comp-methods1/notebooks/blob/main/interpolation/lecture.ipynb\#Theorem:-linear-interpolation-error}{Linear interpolation error}]
+Let $u \in C^2(I)$. Then 
+    \begin{align*}
+\|u - \I_h u\|_{L^\infty(I)} \lesssim \|(h \partial)^2 u\|_{L^\infty(I)}.
+    \end{align*}
+\end{theorem}
+
+Here $\lesssim$ means that there is a constant, independent of $u$ and $h$ such that the left-hand side is bounded by the constant times the right-hand side.
+
+Moreover, it follows from the \href{https://nbviewer.org/github/uh-comp-methods1/notebooks/blob/main/interpolation/lecture.ipynb#Theorem:-error-in-differentiation}{error in differentiation} theorem that 
+    \begin{align}\label{eq_err_in_diff}
+\max_{i=1,\dots,n}\|(h\partial)(u - \I_h u)\|_{L^\infty(I_i)} \lesssim \|(h \partial)^2 u\|_{L^\infty(I)}.
+    \end{align}
+
+\subsection{P1 finite element space}
+
+Consider the mesh (\ref{def_mesh}) and define 
+    \begin{align}\label{def_P1_basis}
+\phi_i(x) = \begin{cases}
+\frac{x - x_{i-1}}{x_i - x_{i-1}} & \textnormal{if $x \in I_i$},
+\\
+\frac{x_{i+1} - x}{x_{i+1} - x_i} & \textnormal{if $x \in I_{i+1}$},
+\\
+0 & \textnormal{otherwise}.
+\end{cases}
+\qquad i = 1,\dots,n-1,
+    \end{align}
+We write
+    \begin{align}\label{def_S}
+S &= \linspan \{ \phi_1,\dots,\phi_{n-1} \},
+\\\notag
+P^1_{h} &= \{ u \in C(I) \mid \textnormal{$u|_{I_{i}} \in \mathbb P_1$ for $i=0,\dots,n-1$} \},
+\\\notag
+P^1_{h,0} &= \{ u \in P^1_{h} \mid u(0) = u(1) = 0 \}.
+    \end{align}
+
+\begin{lemma}
+$\dim S = n-1$ and $S = P^1_{h,0}$.
+\end{lemma}
+\begin{proof}
+Note that $\phi_i$ is continuous at $x_i$ and $\phi_i(x_i) = 1$.
+It is also continuous at $x_{i-1}$ and at $x_{i+1}$,
+and $\phi_i(x_k) = 0$ for $i \ne k$. In particular, $\phi_i$ is continuous on $I$, and we see that $S \subset P_{h,0}^1$.
+
+We establish $\dim S = n - 1$ by showing that $\phi_1,\dots,\phi_{n-1}$ give a basis of $S$.
+It is enough to show that they are linearly independent.
+Suppose that 
+    \begin{align*}
+c_1 \phi_1 + \dots + c_{n-1} \phi_{n-1} = 0
+    \end{align*}
+for some $c_i \in \R$. Evaluating this function at $x_k$, we get 
+$c_k = 0$.
+
+Let $u \in P^1_{h,0}$. It remains to show that there are such $c_i \in \R$ that, writing
+    \begin{align*}
+v = c_1 \phi_1 + \dots + c_{n-1} \phi_{n-1},
+    \end{align*}
+we have $u = v$. 
+Take $c_i = u(x_i)$. Then 
+the polynomials
+$u|_{I_i}, v|_{I_i} \in \mathbb P_1$ 
+coincide at the points $x_{i-1}, x_i \in I_i$, and hence everwhere in $I_i$.
+\end{proof}
+
+\begin{remark}\label{rem_Ih}
+The function $v$ in the above proof is $\I_h u$.
+\end{remark}
+
+\subsection{Peeking ahead\label{sec_peek}}
+
+Observe that $\phi_i \notin C^1(I)$, and therefore $\phi_i$ is not in the space $\mathcal V$
+that we used earlier, see \eqref{def_wrong_V}. We will define a weaker notion of derivative so that $\phi_i$ is differentiable in this weak sense. Letting $V$ to be the space of weakly differentiable functions on $I$, with vanishing boundary conditions, 
+we will show that $S$ is a subspace of $V$ and that 
+    \begin{align*}
+a(u, v) = (u', v'), \quad a : V \times V \to \mathbb R,
+    \end{align*}
+is an inner product on $V$. Here prime stands now for the weak derivative. (For differentiable functions, the weak derivative is the usual derivative, so this notation will not cause trouble.)
+
+The abstract error estimate for the Galerkin solution (Corollary \ref{cor_abs_err}) holds for the spaces $S$ and $V$. 
+We can turn the abstract error estimate into a concrete one as follows. Write $\|\cdot\|$ for the norm in $L^2(I)$ and suppose that $u \in V \cap C^2(I)$ satisfies
+    \begin{align*}
+a(u, v) = L(v) \quad \text{for all $v \in V$},
+    \end{align*}
+where $L$ is a linear functional.
+Then, using the fact that $\I_h u \in S$,
+    \begin{align}\label{eq_err_peek}
+\|(h\partial)(u-u_S)\|
+&= 
+h\|u-u_S\|_E 
+= 
+h \min_{v \in S}\|u-v\|_E
+\le 
+\|(h\partial)(u-\I_h u)\|
+\\\notag&\le
+\max_{i=1,\dots,n}\|(h\partial)(u - \I_h u)\|_{L^\infty(I_i)} 
+\lesssim\|(h \partial)^2 u\|_{L^\infty(I)}.
+    \end{align}
+The last inequality is the bound \eqref{eq_err_in_diff} for the derivative of the linear interpolation error.
+
+It is possible to show stronger estimates, and we will return to this once we have defined and studied weak derivatives. 
+
+\section{Sobolev spaces}
+
+\subsection{Preliminary results in real analysis}
+
+We will need some results that are proven in \href{https://studies.helsinki.fi/opintotarjonta/cu/hy-CU-133769219-2020-08-01}{Introduction to Real and Fourier Analysis}.
+A normed vector space is called a Banach space if it is complete, that is, if all its Cauchy sequences converge. In this section, $I$ is a closed, bounded, nontrivial interval.
+
+\begin{theorem}[Completeness of $L^p$ spaces, Th. 1.45 of \cite{Holopainen}]
+$L^p(I)$ is a Banach space for any $p \ge 1$.
+\end{theorem}
+
+Also the case $I = \R$ is covered by the theorem, and so is the case $p = \infty$, see Section 1.28 of \cite{Holopainen} for the definition of $L^\infty(I)$, the space of essentially bounded functions. The theorem requires using the Lebesgue integral in the definition of $L^p(I)$, $1 \le p < \infty$. 
+
+Completeness is needed in order to be able to do analysis efficiently. The difference between the sets of real and rational numbers is that the former is complete whereas the latter is not. 
+We will mostly use $L^2(I)$. It is a Hilbert space, that is, a complete inner product space. The interplay between inner product and completeness allows for building a very elegant machinery. 
+
+The space of continuous functions is not complete with respect to the $L^2(I)$ norm (this follows from Theorems \ref{th_smoothing} and \ref{th_L2_density} below), so we can not make the machinery to work in this space. Nonetheless, we mostly want to work with continuous or smoother functions in practice. This is achieved by approximating functions in $L^2(I)$ with smooth functions. 
+
+We write $I^\inter$ for the interior of $I$, that is, 
+if $I = [x_L, x_R]$ then $I^\inter = (x_L, x_R)$. 
+Moreover, we write $\supp(u)$, where $u \in C(I)$, for the closure of 
+    \begin{align*}
+\{x \in I \mid u(x) \ne 0\}.
+    \end{align*}
+
+
+\begin{definition}[Spaces of smooth functions]
+    \begin{align*}
+C^\infty(I) &= 
+\{ u \mid 
+\textnormal{$u \in C^k(I)$ for all $k=0,1\dots$} \},
+\\
+C_0^\infty(I) &= 
+\{ u \in C^\infty(I) \mid 
+\textnormal{$\supp(u) \subset I^\inter$}\}.
+    \end{align*}
+\end{definition}
+
+All the function spaces mentioned so far can be considered in the case $I = \R$ as well.
+
+\begin{theorem}[Smoothing by convolution, Th. 2.26 and Rem. 2.28 of \cite{Holopainen}]\label{th_smoothing}
+Let $f \in L^2(\R)$ and $g \in C_0^\infty(\R)$. Then the convolution
+    \begin{align*}
+f * g(x) = \int_\R f(y) g(x - y) dy
+    \end{align*}
+satisfies $f * g \in C^\infty(\R)$.
+\end{theorem}
+
+It is shown on p. 30 of \cite{Holopainen} that 
+there is a sequence of functions $g_k \in C_0^\infty(\R)$, $k=1,2,\dots$, taking positive values and satisfying 
+    \begin{align}\label{def_mollifier}
+\supp(g) \subset \{x \in \R \mid |x| \le 1/k\}
+\quad\text{and}\quad
+\int_\R g_k(x) dx = 1.
+    \end{align}
+Such sequence is often called a \href{https://en.wikipedia.org/wiki/Mollifier}{mollifier}.
+
+\begin{theorem}[Mollification, Th. 2.34 of \cite{Holopainen}]\label{th_L2_density}
+Let $g_k \in C_0^\infty(\R)$, $k=1,2,\dots$,
+be a mollifier. Then for all $f \in L^2(\R)$ there holds $f * g_k \to f$ in $L^2(\R)$ as $k \to \infty$. 
+\end{theorem}
+
+\subsection{Weak derivative}
+
+Analogously to (\ref{def_L}), it is often convenient to view a function $f \in L^2(I)$ 
+as the linear map $L_f : C_0^\infty(I) \to \R$ defined by 
+    \begin{align*}
+L_f(\phi) = (f, \phi),
+    \end{align*}
+where $(\cdot,\cdot)$ is the inner product on $L^2(I)$.
+The following lemma shows that $f$ can be recovered from $L_f$, in other words, the map $f \mapsto L_f$ is injective. 
+
+\begin{lemma}
+Let $u, v \in L^2(I)$ and suppose that 
+    \begin{align*}
+L_u(\phi) = L_v(\phi), \quad \text{for all $\phi \in C_0^\infty(I)$}.
+    \end{align*}
+Then $u = v$.
+\end{lemma}
+\begin{proof}
+Let $K \subset I^\inter$ be compact.
+We define the \href{https://en.wikipedia.org/wiki/Indicator_function}{indicator function} 
+    \begin{align*}
+1_K(x) = 
+\begin{cases}
+1 & x \in K,
+\\ 
+0 & \text{otherwise}.
+\end{cases}
+    \end{align*}
+By Theorems \ref{th_smoothing} and \ref{th_L2_density} there is a sequence $\phi_k \in C^\infty(\R)$, $k=1,2,\dots$, converging to $(u - v)1_K$ in $L^2(\R)$ as $k \to \infty$. It can be shown that $\supp(\phi_k) \subset I^\inter$ for large $k$. Hence  
+    \begin{align*}
+0 = \lim_{k \to \infty} (L_u(\phi_k) - L_v(\phi_k)) = \lim_{k \to \infty} (u - v, \phi_k) = \|(u - v) 1_K\|_{L^2(I)}^2.
+    \end{align*} 
+Thus $u = v$ in $K$. 
+Writing $I = [x_L, x_R]$, we choose $K = [x_L + \epsilon, x_R -\epsilon]$ and let $\epsilon \to 0$. 
+\end{proof}
+
+\begin{definition}[Weak derivative]
+The weak derivative of $f \in L^2(I)$ is the linear map
+    \begin{align*}
+L(\phi) = -(f, \phi'), \quad \phi \in C_0^\infty(I).
+    \end{align*}
+\end{definition}
+
+\begin{lemma}\label{lem_weak_classic}
+If $f \in C^1(I)$ then the weak derivative of $f$ is the linear map $L_{f'}$.
+\end{lemma}
+\begin{proof}
+Let $\phi \in C_0^\infty(I)$ and integrate by parts
+    \begin{align*}
+-(f, \phi') = (f', \phi) = L_{f'}(\phi).
+    \end{align*}
+\end{proof}
+
+\begin{example}\label{ex_relu}
+Let $I = [-1,1]$ and consider the function $u \in L^2(I)$ defined by
+    \begin{align*}
+u(x) = \begin{cases}
+0 & x < 0,
+\\
+x & x > 0.
+\end{cases}
+    \end{align*}
+(In the context of artificial neural networks, this function is called the \href{https://en.wikipedia.org/wiki/Rectifier_(neural_networks)}{rectifier} or ReLU as in Rectified Linear Unit.)
+The weak derivative of $u$ is the linear map $L_w$ where
+$w \in L^2(I)$ is defined by 
+    \begin{align*}
+w(x) = \begin{cases}
+0 & x < 0,
+\\
+1 & x > 0.
+\end{cases}
+    \end{align*}
+\end{example}
+\begin{proof}
+Let $\phi \in C_0^\infty(I)$ and integrate by parts
+    \begin{align*}
+-(u, \phi') = -\int_0^1 x \phi'(x) dx = \int_0^1 \phi(x) dx
+= (w, \phi).
+    \end{align*}
+Observe that the boundary terms coming from the integration by parts vanish since $x$ vanishes at $x = 0$ and $\phi'(x)$ at $x = 1$. 
+\end{proof}
+
+\subsection{Spaces of weakly differentiable functions}
+
+If there is $w \in L^2(I)$ such that the weak derivative of $u \in L^2(I)$ coincides with $L_w$ then we write $w = u'$.
+Moreover, we write $u' \in L^2(I)$ for $u \in L^2(I)$ if there exists such $w \in L^2(I)$.
+Observe that if $w, \tilde w \in L^2(I)$ satisfy $w = u' = \tilde w$ then $L_w = L_{\tilde w}$, and hence also $w = \tilde w$. 
+So the notation makes sense. 
+
+If $u' \in L^2(I)$ then we can define $u''$ by $(u')' \in L^2(I)$. 
+In other words, if $u' \in L^2(I)$ then there is $w \in L^2(I)$
+such that the weak derivative coincides with $L_w$. As $L_w$ determines $w$, we can define the second weak derivative of $u$ as the weak derivative of $w$.
+We can iterate further as in the following definition.
+
+\begin{definition}[Sobolev spaces]
+    \begin{align*}
+H^k(I) = \{ u \in L^2(I) \mid u', \dots, u^{(k)} \in L^2(I)\}.
+    \end{align*}
+\end{definition}
+
+Removing the shorthand notation, the definition of $H^1(I)$ reads
+    \begin{align*}
+H^1(I) = \{ u \in L^2(I) \mid
+\  
+&\text{there is $w \in L^2(I)$ such that}
+\\
+&\text{$(w, \phi) = -(u, \phi')$ for all $\phi \in C_0^\infty(I)$}
+\}.
+    \end{align*}
+
+We equip $H^1(I)$ with the inner product
+    \begin{align*}
+(u,v)_{H^1(I)} = (u,v) + (u', v').
+    \end{align*}
+Let us show that this is indeed an inner product.
+It is clearly symmetric. 
+To show that it is linear in its both arguments, it is enough to show that the map $u \mapsto u'$ is linear. Let $u, \tilde u \in H^1(I)$ and let $c \in \R$. Then 
+    \begin{align*}
+((u + c \tilde u)', \phi) 
+&= 
+-(u + c \tilde u, \phi')
+= 
+-(u, \phi') - c (\tilde u, \phi')
+= 
+(u', \phi) + c(\tilde u', \phi)
+\\&=
+(u' + c \tilde u', \phi).
+    \end{align*}
+This shows the required linearity 
+    \begin{align}\label{eq_weakd_lin}
+(u + c \tilde u)' = u' + c \tilde u'.
+    \end{align}
+Finally, $(u,v)_{H^1(I)}> 0$ for $u \ne 0$ since 
+    \begin{align*}
+(u,u) + (u', u') \ge (u, u) > 0.
+    \end{align*}
+
+
+Similarly to Example \ref{ex_relu}, we can show the following. 
+
+\begin{example}\label{ex_P1_basis}
+The basis functions \eqref{def_P1_basis} are in $H^1(I)$ with $I = [0,1]$.
+\end{example}
+
+
+See Chapter 8 of \cite{Brezis} for the proofs of the following results.
+
+\begin{proposition}[Completeness of $H^1(I)$, Prop. 8.1 \cite{Brezis}]
+$H^1(I)$ is a Hilbert space.
+\end{proposition}
+
+\begin{lemma}[Vanishing derivative, Lem. 8.1 \cite{Brezis}]
+If $u \in L^2(I)$ satisfies $u' = 0$, then $u$ is a constant. 
+\end{lemma}
+
+\begin{theorem}[Extension, Th. 8.6 \cite{Brezis}]
+There is linear $E : H^1(I) \to H^1(\R)$
+satisfying $E u|_{I} = u$ and
+    \begin{align*}
+\|E u\|_{L^2(\R)} \lesssim \|u\|_{L^2(I)},
+\quad 
+\|E u\|_{H^1(\R)} \lesssim \|u\|_{H^1(I)}.
+    \end{align*}
+\end{theorem}
+
+\begin{theorem}[Density, Th. 8.7 \cite{Brezis}]
+Let $u \in H^1(I)$. Then there is a sequence $u_j \in C_0^\infty(\R)$, $j=1,2,\dots$, such that $u_j|_{I} \to u$ in $L^2(I)$.
+\end{theorem}
+
+\begin{theorem}[Sobolev embedding, Th. 8.8 \cite{Brezis}]\label{th_sob_embedding}
+$H^1(I) \subset C(I)$ and 
+    \begin{align*}
+\|u\|_{L^\infty(I)} \le \|u\|_{H^1(I)}.
+    \end{align*}
+\end{theorem}
+
+In view of Theorem \ref{th_sob_embedding}, writing $I=[x_L, x_R]$, we may define
+    \begin{align*}
+H_0^1(I) = \{u \in H^1(I) \mid u(x_L) = 0 = u(x_R) \}.
+    \end{align*}
+
+\begin{theorem}[Density with vanishing boundary conditions, Th. 8.12 \cite{Brezis}]\label{th_density_H01}
+The space $C_0^\infty(I)$ is dense in $H^1_0(I)$.
+\end{theorem}
+
+\begin{proposition}[Poincar\'e's inequality, Prop. 8.13 \cite{Brezis}]\label{prop_poincare}
+    \begin{align*}
+\|u\|_{H^1(I)} \lesssim \|u'\|_{L^2(I)}, \quad u \in H_0^1(I).
+    \end{align*}
+\end{proposition}
+
+\section{Finite element method in one dimension}
+
+\subsection{Formulation of the P1 method}
+
+Let us revisit the sketch in Section~\ref{sec_peek}, and make it precise.
+We set 
+    \begin{align*}
+I = [0,1], \quad V = H_0^1(I),
+    \end{align*}
+and define the bilinear form
+    \begin{align*}
+a(u, v) = (u', v'), \quad a : V \times V \to \mathbb R.
+    \end{align*}
+Then $a$ is an inner product. Indeed,
+if $a(u,u) = 0$ then $u=0$ by Proposition~\ref{prop_poincare}.
+Let $S$ be the finite dimensional space in \eqref{def_S}.
+It follows from Example~\ref{ex_P1_basis} that $S \subset V$.
+Let $f \in L^2(I)$ and define the linear form
+    \begin{align*}
+L(v) = (f, v), \quad L : V \to \R.
+    \end{align*}
+By Theorem \ref{th_gsol} there is unique $u_S \in S$ such that 
+    \begin{align}\label{def_P1_fem}
+a(u_S,v) = L(v) \quad \text{for all $v \in S$}.
+    \end{align}
+We say that \eqref{def_P1_fem} defines the P1 finite element method for the weak formulation,
+    \begin{align}\label{def_weak_form}
+a(u, v) = L(v) \quad \text{for all $v \in V$},
+    \end{align}
+of the boundary value problem \eqref{eq_poisson_1d}.
+
+\begin{lemma}\label{lem_formulations}
+The following are equivalent for $u \in V$:
+\begin{enumerate}
+\item the weak formulation \eqref{def_weak_form} holds,
+\item $a(u, \phi) = L(\phi)$ for all $\phi \in C_0^\infty(I)$,
+\item $-u'' = f$ in the sense of weak derivatives, that is, the weak derivative of $-u' \in L^2(I)$ coincides with $L_f$.
+\end{enumerate}
+Moreover, if $u \in C^2(I) \cap V$ then they imply $-u'' = f$ in the sense of classical derivatives. 
+\end{lemma}
+\begin{proof}
+(1) implies (2) since $C_0^\infty(I) \subset V$.
+Let us show that (2) implies (1).
+Let $v \in V$.
+By the density in Theorem \ref{th_density_H01},
+there is a sequence $\phi_j \in C_0^\infty(I)$ 
+converging to $v$ in $H^1(I)$ as $j \to 0$. 
+Thus it is enough to show that 
+    \begin{align*}
+a(u,\phi_j) \to a(u,v)
+\quad \text{and} \quad 
+L(\phi_j) \to L(v)
+    \end{align*}
+as $j \to \infty$. But this follows from the continuity estimates
+    \begin{align}\label{eq_a_L_cont}
+a(u_1,u_1) \le \|u_1'\| \|u_2'\|,
+\quad L(u_1) \le \|u_1\|, \qquad u_1, u_2 \in V.
+    \end{align}
+Note that \eqref{eq_a_L_cont} is a consequence of the Cauchy-Schwarz inequality.
+
+Let us show next that (2) and (3) are equivalent.
+The weak derivative of $-u' \in L^2(I)$ is, by definition, the linear map 
+    \begin{align*}
+\phi \mapsto (u', \phi') = a(u, \phi), \quad \phi \in C_0^\infty(I).
+    \end{align*} 
+Thus it is equal to $L_f = L$ if and only if (2) holds.
+
+Suppose $u \in C^2(I) \cap V$.
+Then the weak derivative of $u$ coincides with $L_{u'}$
+and the weak derivative of $-u' \in C^1(I)$
+coincides with $L_{-u''}$ due to Lemma \ref{lem_weak_classic}. Thus $L_{-u''} = L_f$ by (3)
+and this yields $-u'' = f$.
+\end{proof}
+
+\begin{proposition}[Preliminary error estimate]
+Let $u \in C^2(I)$ solve \eqref{eq_poisson_1d}
+and let $u_S$ solve \eqref{def_P1_fem}.
+Then
+    \begin{align*}
+\|(h\partial)(u-u_S)\|
+\lesssim
+\|(h \partial)^2 u\|_{L^\infty(I)}.
+    \end{align*}
+\end{proposition}
+\begin{proof}
+Recall that $u$ satisfies (\ref{eq_weak_prelim}).
+Moreover, $u \in C^2(I) \cap V$ due to the boundary conditions in \eqref{eq_poisson_1d}. Hence (\ref{def_weak_form}) holds by the implication (2)$\implies$(1) in Lemma~\ref{lem_formulations}.
+Recall that $S \subset V$,
+$a$ is an inner product on $V$, and that $S$ is finite dimensional. 
+Hence the abstract error estimate in Corollary \ref{cor_abs_err} holds.
+
+Remark \ref{rem_Ih} implies $\I_h u \in S$. We can repeat the argument \eqref{eq_err_peek}, with all the steps fully justified,
+    \begin{align*}
+\|(h\partial)(u-u_S)\|
+&= 
+h\|u-u_S\|_E 
+= 
+h \min_{v \in S}\|u-v\|_E
+\le 
+\|(h\partial)(u-\I_h u)\|
+\\&\le
+\max_{i=1,\dots,n}\|(h\partial)(u - \I_h u)\|_{L^\infty(I_i)} 
+\lesssim
+\|(h \partial)^2 u\|_{L^\infty(I)}.
+    \end{align*}
+Here the first equality follows from the definitions 
+    \begin{align}\label{eq_E_recall}
+\|w\|_E^2 = a(w,w) = \|w'\|^2, \quad w \in V,
+    \end{align}
+the second equality is Corollary \ref{cor_abs_err},
+the first inequality follows from $\I_h u \in S$, together with \eqref{eq_E_recall}, 
+the second inequality simply replaces $(u - \I_h u)'|_{I_i} \in C^1(I_i)$ by its maximum on each $I_i$, and the last inequality is \eqref{eq_err_in_diff}.
+\end{proof}
+
+
+\subsection{Interpolation estimates}
+
+\subsection{Error estimate in $H^1$}
+
+\subsection{Some facts on Hilbert spaces}
+
+\subsection{Error estimate in $L^2$}
+
+\subsection{Higher order methods}
+
+\bibliographystyle{abbrv}
+\bibliography{refs}
+\end{document}
