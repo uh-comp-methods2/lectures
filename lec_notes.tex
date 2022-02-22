@@ -27,13 +27,26 @@
 
 \begin{document}\maketitle
 
-These lecture notes are for 
-\href{https://studies.helsinki.fi/courses/cu/hy-CU-141575726-2020-08-01}{Computational methods II} course at the University of Helsinki. 
-These notes, together with their source in \LaTeX,
-%available at , 
-are licensed under the Creative Commons Attribution 4.0 International license.
+\noindent
+Lecture notes for
+\href{https://studies.helsinki.fi/courses/cu/hy-CU-141575726-2020-08-01}{Computational methods II} course at the University of Helsinki, licensed under the Creative Commons Attribution 4.0 International license.
+The \LaTeX\ source code is available in \href{https://github.com/uh-comp-methods2/lectures}{GitHub}.
 
 \tableofcontents
+
+\section{Introduction}
+
+The finite element method is a widely used method for numerically solving differential equations arising in engineering and mathematical modeling. There are many commercial (e.g.~\href{https://en.wikipedia.org/wiki/COMSOL_Multiphysics}{Comsol}) and open-source (e.g.~\href{https://en.wikipedia.org/wiki/FEniCS_Project}{Fenics}) software packages implementing sophisticated versions of the method. The method is very flexible, and it can be used to solve systems of equations describing many physical phenomena, see for example this \href{https://www.comsol.com/video/joule-heating-fuse-circuit-board-chapter-1}{video} on modeling of resistive heating in an aluminum fuse using Comsol. Rather than applying the method to complicated models, using complex and often opaque software, we will focus on its
+
+\begin{enumerate}[1. ]
+\item Mathematical foundation
+\item Implementation using \href{https://scikit-fem.readthedocs.io/en/latest/}{Scikit-fem}, written in pure Python 
+\end{enumerate}
+
+The present document, covering the first topic, is complemented by Jupyter notebooks on the second topic. They are available in 
+\href{https://github.com/uh-comp-methods2/notebooks}{GitHub}.
+
+Our presentation of basic concepts, Sobolev spaces and interpolation theory is inspired by Chapter 0 of \cite{BS}, Chapter 8 of \cite{Brezis}, and Chapter 1 of \cite{EG}, respectively. 
 
 \section{Basic concepts}
 
@@ -460,7 +473,6 @@ C \|u\|_X + C\|u_j - u\|_X + \|Au - Au_j\|_Y.
     \end{align}
 The claim follows from the continuity of $A$ by letting $j \to \infty$.
 \end{proof}
-
 
 \subsection{Square integrable functions}
 
@@ -1346,6 +1358,35 @@ a(u,v) &= \int_\Omega (\nabla u \cdot \nabla v + (b \cdot \nabla u) v+ q u v)\, 
     \end{align*} 
 is nonsymmetric unless $\nabla b = 0$. The general theory is typically developed under the assumption that $a$ is coercive so that the \href{https://en.wikipedia.org/wiki/Weak_formulation#The_Lax%E2%80%93Milgram_theorem}{Lax--Milgram} theorem can be substituted for the Riesz representation theorem. In this case the sketch in the previous section requires only relatively minor changes. 
 
-\bibliographystyle{abbrv}
-\bibliography{refs}
+% To the students looking at this code: 
+% I recommend using BibTeX for reference management.
+% In fact this list of references was obtained by tuning slightly an output of bibtex.  
+% For your convenience, I added links to Helka.
+\begin{thebibliography}{1}
+
+\bibitem{BS}
+S.~C. {Brenner} and L.~R. {Scott}.
+\newblock {\em {The mathematical theory of finite element methods}}.
+\newblock New York, NY: \href{https://doi.org/10.1007/978-0-387-75934-0}{Springer}, 2008.
+Available in \href{https://helka.helsinki.fi/permalink/358UOH_INST/q5v72t/alma9934193675806253}{Helka}.
+
+\bibitem{Brezis}
+H.~{Brezis}.
+\newblock {\em {Functional analysis, Sobolev spaces and partial differential
+  equations}}.
+\newblock New York, NY: \href{https://doi.org/10.1007/978-0-387-70914-7}{Springer}, 2011.
+Available in \href{https://helka.helsinki.fi/permalink/358UOH_INST/1rnip4l/alma9926442113506253}{Helka}.
+
+\bibitem{EG}
+A.~{Ern} and J.-L. {Guermond}.
+\newblock {\em {Theory and practice of finite elements}}.
+\newblock New York, NY: \href{https://doi.org/10.1007/978-1-4757-4355-5}{Springer}, 2004.
+Available in \href{https://helka.helsinki.fi/permalink/358UOH_INST/1rnip4l/alma9934192676606253}{Helka}.
+
+\bibitem{Holopainen}
+I.~{Holopainen}.
+\newblock {\em {Real Analysis I}}.
+\newblock Avaiblabe on the Moodle page.
+
+\end{thebibliography}
 \end{document}
