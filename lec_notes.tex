@@ -323,7 +323,7 @@ Following the notation on p.~4 of \cite{EG}, we write
     \begin{align}\label{def_S}
 S &= \linspan \{ \phi_1,\dots,\phi_{n-1} \},
 \\\notag
-P^1_{h} &= \{ u \in C(I) \mid \text{$u|_{I_{i}} \in \mathbb P_1$ for $i=0,\dots,n-1$} \},
+P^1_{h} &= \{ u \in C(I) \mid \text{$u|_{I_{i}} \in \mathbb P_1$ for $i=1,\dots,n$} \},
 \\\notag
 P^1_{h,0} &= \{ u \in P^1_{h} \mid u(0) = u(1) = 0 \}.
     \end{align}
@@ -353,7 +353,7 @@ we have $u = v$.
 Take $c_i = u(x_i)$. Then 
 the polynomials
 $u|_{I_i}, v|_{I_i} \in \mathbb P_1$ 
-coincide at the points $x_{i-1}, x_i \in I_i$, and hence everwhere in $I_i$.
+coincide at the points $x_{i-1}, x_i \in I_i$, and hence everywhere in $I_i$.
 \end{proof}
 
 \begin{remark}\label{rem_Ih}
@@ -474,6 +474,14 @@ C \|u\|_X + C\|u_j - u\|_X + \|Au - Au_j\|_Y.
 The claim follows from the continuity of $A$ by letting $j \to \infty$.
 \end{proof}
 
+\begin{remark}\label{rem_cont_density}
+We could replace \eqref{eq_cont_density} in Lemma \ref{lem_cont_density} with
+    \begin{align*}
+\|Au\|_Y \le p(u),
+    \end{align*}
+where $p$ is a continuous \href{https://en.wikipedia.org/wiki/Seminorm}{seminorm} on $X$.
+\end{remark}
+
 \subsection{Square integrable functions}
 
 We will need some results that are proven in \href{https://studies.helsinki.fi/opintotarjonta/cu/hy-CU-133769219-2020-08-01}{Introduction to real and Fourier analysis}.
@@ -516,11 +524,11 @@ satisfies $f * g \in C^\infty(\R)$.
 It is shown on p. 30 of \cite{Holopainen} that 
 there is a sequence of functions $g_k \in C_0^\infty(\R)$, $k=1,2,\dots$, taking positive values and satisfying 
     \begin{align}\label{def_mollifier}
-\supp(g) \subset \{x \in \R \mid |x| \le 1/k\},
+\supp(g_k) \subset \{x \in \R \mid |x| \le 1/k\},
 \quad
 \int_\R g_k(x) dx = 1.
     \end{align}
-Such sequence is often called a \href{https://en.wikipedia.org/wiki/Mollifier}{mollifier}.
+Such a sequence is often called a \href{https://en.wikipedia.org/wiki/Mollifier}{mollifier}.
 
 \begin{theorem}[Mollification, Th. 2.34 of \cite{Holopainen}]\label{th_mollification}
 Let $g_k \in C_0^\infty(\R)$, $k=1,2,\dots$,
@@ -593,7 +601,7 @@ Then $u = v$.
 \begin{proof}
 The linear form 
     \begin{align*}
-A w = (u - v, w), \quad A : L^2(I) \to \R,
+A(w) = (u - v, w), \quad A : L^2(I) \to \R,
     \end{align*}
 is continuous due to the Cauchy--Schwarz inequality.
 We have $A \phi = 0$ for all $\phi \in C_0^\infty(I)$.
@@ -759,7 +767,7 @@ Let $u \in H^1(I)$. Then there is a sequence $u_j \in C_0^\infty(\R)$, $j=1,2,\d
 \begin{theorem}[Sobolev embedding, Th. 8.8]\label{th_sob_embedding}
 $H^1(I) \subset C(I)$ and 
     \begin{align*}
-\|u\|_{L^\infty(I)} \le \|u\|_{H^1(I)}.
+\|u\|_{L^\infty(I)} \lesssim \|u\|_{H^1(I)}.
     \end{align*}
 \end{theorem}
 
@@ -858,7 +866,7 @@ Let $u \in C^2(I)$ solve \eqref{eq_poisson_1d}
 and let $u_h \in P_{h,0}^1$ solve \eqref{def_P1_fem}.
 Then
     \begin{align*}
-\|(h\partial)(u-u_S)\|
+\|(h\partial)(u-u_h)\|
 \lesssim
 \|(h \partial)^2 u\|_{L^\infty(I)}.
     \end{align*}
@@ -911,23 +919,23 @@ Due to the embedding $H^1(I) \subset C(I)$ we may view $\I_h$ as a linear map
     \end{align*}
 \end{theorem}
 \begin{proof} 
-Step 1 (a weaker estimate).
-We have 
-    \begin{align}\label{eq_Ih_L2_cont}
-\|\I_h u\| \lesssim \|\I_h u\|_{L^\infty(I)}
-\le \|u\|_{L^\infty(I)} \lesssim \|u\|_{H^1(I)}, \quad u \in H^1(I).
-    \end{align}
-
-Step 2 (smooth case).
+Step 1 (smooth case).
 We will show that 
     \begin{align}\label{eq_Ih_cont_pre}
 \|\I_h u\|_{H^1(I)} \lesssim \|u\|_{H^1(I)},
 \quad u \in C^\infty(I).
     \end{align}
-Let $u \in C^\infty(I)$. In view of \eqref{eq_Ih_L2_cont}, it is enough to show that
+In view of
+    \begin{align}\label{eq_Ih_L2_cont}
+\|\I_h u\| \lesssim \|\I_h u\|_{L^\infty(I)}
+\le \|u\|_{L^\infty(I)} \lesssim \|u\|_{H^1(I)}, \quad u \in H^1(I),
+    \end{align}
+it is enough to show that
     \begin{align*}
-\|\p \I_h u\| \lesssim \|u\|_{H^1(I)}.
+\|\p \I_h u\| \lesssim \|u\|_{H^1(I)},
+\quad u \in C^\infty(I).
     \end{align*}
+Let $u \in C^\infty(I)$. 
 By Example \ref{ex_deriv_P1h}
     \begin{align*}
 \p \I_h u|_{I_i} = \frac{u(x_i) - u(x_{i-1})}{x_i - x_{i-1}}.
@@ -948,49 +956,33 @@ Thus
 \sum_{i=1}^n \|u'\|_{L^2(I_i)}^2 \le \|u\|_{H^1(I)}^2.
     \end{align*}
 
-Step 3 (continuity).
+Step 2 (continuity).
 Recall that the notation $\lesssim$ means that the implicit constant in the inequality is independent of both $u$ and $h$.
-In this step we show that $\I_h : H^1(I) \to H^1(I)$ is continuous, but the constant $C > 0$ in Definition \ref{def_cont} is allowed to depend on $h$. We give two proofs. The first one uses 
-the \href{https://en.wikipedia.org/wiki/Closed_graph_theorem}{closed graph} theorem whereas the second does not.
+In this step we show that $\I_h : H^1(I) \to H^1(I)$ is continuous, but the constant $C > 0$ in Definition \ref{def_cont} is allowed to depend on $h$. There holds 
+    \begin{align*}
+\I_h u = \sum_{i=0}^n u(x_i) \phi_i,
+    \end{align*}
+where the basis functions $\phi_i$ are defined by \eqref{def_P1_basis}. (The definition extends to the cases $i=0,n$ by taking $I_0$ and $I_{n+1}$ to be, say,  empty sets.) 
+Hence
+    \begin{align*}
+\|\I_h u\|_{H^1(I)} \le \|u\|_{L^\infty(I)} \sum_{i=0}^n \|\phi_i\|_{H^1(I)}
+\le C_h \|u\|_{H^1(I)},
+    \end{align*}
+where the constant $C_h > 0$ depends on $h > 0$, but not on $u$.
 
-{\em First proof of Step 3.}
-By the closed graph theorem it is enough to show that the graph of $\I_h$ is closed, that is, we need to show that if a sequence of pairs $(u_j, \I_h u_j)$, $j=1,2,\dots$,
+Step 3 (closure).
+In view of \eqref{eq_Ih_cont_pre} and the density in Theorem \ref{th_density_H1}, the claim follows from Lemma \ref{lem_cont_density}
+with $A=\I_h$, $X = H^1(I)$ and $D = C^\infty(I)$.
+\end{proof}
+
+\begin{remark}
+An alternative way to show the continuity in the above proof is to the \href{https://en.wikipedia.org/wiki/Closed_graph_theorem}{closed graph} theorem.
+\end{remark}
+
+Indeed, by the closed graph theorem it is enough to show that the graph of $\I_h$ is closed, that is, we need to show that if a sequence of pairs $(u_j, \I_h u_j)$, $j=1,2,\dots$,
 with $u_j \in H^1(I)$ converges to $(u, v)$ in $H^1(I) \times H^1(I)$ then $\I_h u = v$.
 Now $\I_h u_j \to \I_h u$ in $L^2(I)$ by \eqref{eq_Ih_L2_cont}.
 Also, $\I_h u_j \to v$ in $L^2(I)$ as convergence in $H^1(I)$ implies convergence in $L^2(I)$. But the limit of a convergent sequence is unique, and therefore $\I_h u = v$.
-
-Before presenting the alternative proof of Step 3, let us give the final step.
-
-Step 4 (closure).
-In view of \eqref{eq_Ih_cont_pre} and the density in Theorem \ref{th_density_H1}, the claim follows from Lemma \ref{lem_cont_density}
-with $A=\I_h$, $X = H^1(I)$ and $D = C^\infty(I)$.
-
-{\em Second proof of Step 3.}
-By the density in Theorem \ref{th_density_H1}
-there is a sequence $u_j \in C^\infty(I)$, $j=1,2,\dots$,
-such that $u_j \to u$ in $H^1(I)$ as $j \to \infty$.
-Now \eqref{eq_Ih_cont_pre} implies that 
-    \begin{align*}
-\|\I_h u_j - \I_h u_k \|_{H^1(I)} \lesssim \|u_j - u_k\|_{H^1(I)}
-    \end{align*}
-and this converges to zero as $j,k \to \infty$. 
-Thus $\I_h u_j$, $j=1,2,\dots$, is a Cauchy sequence in $H^1(I)$.
-As $H^1(I)$ is complete, $\I_h u_j$ converges to some $v$ in $H^1(I)$.
-By repeating the uniqueness argument in the end of the first proof of Step 3, we see that $\I_h u = v$.
-Finally, using (\ref{eq_Ih_cont_pre}), 
-    \begin{align*}
-\|\I_h u\|_{H^1(I)} 
-&\le 
-\|\I_h u_j\|_{H^1(I)} + \|\I_h u - \I_h u_j\|_{H^1(I)} 
-\\&\lesssim 
-\|u_j\|_{H^1(I)} + \|\I_h u - \I_h u_j\|_{H^1(I)}
-\\&\lesssim 
-\|u\|_{H^1(I)} + \|u_j - u\|_{H^1(I)} + \|\I_h u - \I_h u_j\|_{H^1(I)},
-    \end{align*}
-and the claim follows by letting $j \to \infty$.
-\end{proof}
-
-Observe that, in the second proof of Step 3, we repeated the argument \eqref{eq_cont_dens_aux} in the proof of Lemma \ref{lem_cont_density}, and that the second proof leads right away to the conclusion, bypassing Step 4.
 
 \begin{theorem}[Interpolation inequality]\label{th_interp}
     \begin{align*}
@@ -999,7 +991,7 @@ Observe that, in the second proof of Step 3, we repeated the argument \eqref{eq_
     \end{align*}
 \end{theorem}
 \begin{proof}
-In view of Lemma \ref{lem_cont_density},
+In view of Remark \ref{rem_cont_density},
 the continuity of $\I_h$ on $H^1(I)$ and the density $C^\infty(I) \subset H^2(I)$, it is enough to show the claim for $u \in C^\infty(I)$.
 
 As $u - \I_h u$ vanishes at the points $x_0, \dots, x_n$,
@@ -1133,7 +1125,7 @@ Theorem \ref{th_interp} implies then that
     \begin{align*}
 \|(h\p)(w - \I_h)\| \lesssim \|(h\p)^2 w\|.
     \end{align*}
-By combining the above three inequalities and using Theorem~\ref{th_err_deriv}, we obtain
+By combining the above observations and using Theorem~\ref{th_err_deriv}, we obtain
     \begin{align*}
 \|u-u_h\| 
 \le 
@@ -1149,7 +1141,7 @@ By combining the above three inequalities and using Theorem~\ref{th_err_deriv}, 
 
 Let $k=1,2,\dots$, and define 
     \begin{align*}
-P^k_{h} &= \{ u \in C(I) \mid \text{$u|_{I_{i}} \in \mathbb P_k$ for $i=0,\dots,n-1$} \},
+P^k_{h} &= \{ u \in C(I) \mid \text{$u|_{I_{i}} \in \mathbb P_k$ for $i=1,\dots,n$} \},
 \\\notag
 P^k_{h,0} &= \{ u \in P^k_{h} \mid u(0) = u(1) = 0 \}.
     \end{align*} 
@@ -1228,7 +1220,7 @@ and the finite element method can be generalized to solve the partial differenti
     \end{align} 
 In this case we choose $V$ to be a suitable subspace of $H^1(\Omega)$, depending on the boundary conditions imposed on $u$. 
 
-Let consider the homogeneous \href{https://en.wikipedia.org/wiki/Dirichlet_boundary_condition}{Diriclet boundary condition}
+Let consider the homogeneous \href{https://en.wikipedia.org/wiki/Dirichlet_boundary_condition}{Dirichlet boundary condition}
     \begin{align}\label{eq_dirichlet}
 u|_{\p \Omega} = 0.
     \end{align}
